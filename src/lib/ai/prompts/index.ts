@@ -97,8 +97,10 @@ EDIT RULES:
 - Adding a status like "Review" means adding it to taskStatuses in a sensible position (before done statuses).
 - A new form needs a new collection with fields, plus a form widget (and usually a table) on a fitting page.
 - Do not include "seed" in the output.
-- TASKS ARE DATA, NOT CONFIG: the config only holds structure (pages, forms, statuses, people). To create or assign tasks the user describes, list them in "newTasks": [{ "title", "description"?, "assigneeIds": [member id], "dueDate"?: "YYYY-MM-DD", "status"?: status id, "priority"?: "low"|"medium"|"high"|"urgent", "subtasks"?: [string] }]. Resolve dates against TODAY. Check EXISTING TASKS first and never duplicate one. If only tasks were asked for, return the config unchanged plus "newTasks".
-- NEVER say you added or changed something unless it is actually in "config" or "newTasks". "summary" lists only real changes.
+- TASKS ARE DATA, NOT CONFIG: the config only holds structure (pages, forms, statuses, people). To create or assign tasks the user describes, list them in "newTasks": [{ "title", "description"?, "assigneeIds": [member id], "dueDate"?: "YYYY-MM-DD", "status"?: status id, "priority"?: "low"|"medium"|"high"|"urgent", "subtasks"?: [string] }]. Resolve dates against TODAY. Check EXISTING TASKS first and never duplicate one.
+- CHANGING EXISTING TASKS (move to a status, reassign, new deadline, priority, rename): list each task in "taskUpdates": [{ "task": its #number from EXISTING TASKS, "status"?: status id, "assigneeIds"?: [member id] (the complete new list), "dueDate"?: "YYYY-MM-DD", "priority"?, "title"? }]. Include only the fields that change. "All tasks on the board" / "char ta task" means every matching task, one entry each. Never re-create an existing task in "newTasks".
+- If ONLY tasks are created or changed (no structure change), set "config": null. Do not repeat the config.
+- NEVER say you added or changed something unless it is actually in "config", "newTasks" or "taskUpdates". "summary" lists only real changes.
 - New people ("2 jon notun developer join korse", "add Rahim as tester"): add them to team.members (and a role if needed), keeping existing members. If names were not given, add placeholder names and ask for the real names in "message".
 - When the change creates work to assign (a new form, board, status or report) and the team looks small or still has placeholder names, end "message" with one short question asking if anyone new should be added to the team.
 - Keep "message" to 1-2 short sentences. "summary" bullets max 8 words.
@@ -109,7 +111,7 @@ ${HONESTY_RULES}
 - If NOTHING in the instruction can be done, return the current config unchanged, explain in "message", fill "unsupported", and give helpful "suggestions".
 
 RESPONSE FORMAT:
-{ "message": "short reply in user's language", "summary": ["bullet of each change"], "newTasks": [NewTask], "unsupported": [{ "request", "reason", "alternative" }], "suggestions": [string], "config": WorkspaceConfig }`;
+{ "message": "short reply in user's language", "summary": ["bullet of each change"], "newTasks": [NewTask], "taskUpdates": [TaskUpdate], "unsupported": [{ "request", "reason", "alternative" }], "suggestions": [string], "config": WorkspaceConfig | null }`;
 }
 
 export function editUserPrompt(instruction: string, config: WorkspaceConfig, existingTasks: string[] = []): string {

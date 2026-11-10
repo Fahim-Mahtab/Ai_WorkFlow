@@ -17,6 +17,7 @@ import type {
   priorityIdSchema,
   roleSchema,
   seedTaskSchema,
+  taskUpdateSchema,
   statusColorSchema,
   taskStatusSchema,
   widgetSchema,
@@ -49,6 +50,7 @@ export type WidgetOf<T extends WidgetType> = Extract<Widget, { type: T }>;
 export type Page = z.infer<typeof pageSchema>;
 export type WorkspaceConfig = z.infer<typeof workspaceConfigSchema>;
 export type SeedTask = z.infer<typeof seedTaskSchema>;
+export type TaskUpdate = z.infer<typeof taskUpdateSchema>;
 export type Analysis = z.infer<typeof analysisSchema>;
 export type GenerateResponse = z.infer<typeof generateResponseSchema>;
 export type EditResponse = z.infer<typeof editResponseSchema>;

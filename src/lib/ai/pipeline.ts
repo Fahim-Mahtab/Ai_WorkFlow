@@ -12,8 +12,8 @@ import { detectLanguage } from "./language";
 import { extractJson } from "./json";
 import { editSystemPrompt, editUserPrompt, generateSystemPrompt, repairPrompt, worklogSystemPrompt } from "./prompts";
 import { validateConfig } from "../config/validate";
-import { analysisSchema, seedTaskSchema, unsupportedSchema, worklogResponseSchema } from "../config/schema";
-import type { Analysis, Language, SeedTask, Unsupported, WorkEntry, WorkspaceConfig } from "../config/types";
+import { analysisSchema, seedTaskSchema, taskUpdateSchema, unsupportedSchema, worklogResponseSchema } from "../config/schema";
+import type { Analysis, Language, SeedTask, TaskUpdate, Unsupported, WorkEntry, WorkspaceConfig } from "../config/types";
 import { detectUnsupported, stripUnsupported, suggestionsFor } from "./mock/capabilities";
 import { mockGenerate } from "./mock/generator";
 import { mockEdit } from "./mock/editor";
@@ -55,7 +55,36 @@ export interface EditResult {
   suggestions: string[];
   /** Real tasks the user asked to create (checked against the workspace's people and statuses). */
   newTasks: SeedTask[];
+  /** Changes to existing tasks, by their #number in the task list the client sent. */
+  taskUpdates: TaskUpdate[];
   usage?: UsageReport | null;
+}
+
+const findMember = (config: WorkspaceConfig, a: string) => config.team.members.find((m) => m.id === a || m.name.toLowerCase() === a.toLowerCase())?.id;
+const findStatus = (config: WorkspaceConfig, s: string) => config.taskStatuses.find((x) => x.id === s || x.label.toLowerCase() === s.toLowerCase())?.id;
+
+/** Read changes to existing tasks: only real task numbers, people and statuses; empty changes are dropped. */
+function readTaskUpdates(raw: unknown, config: WorkspaceConfig, taskCount: number): TaskUpdate[] {
+  if (!Array.isArray(raw)) return [];
+  const byTask = new Map<number, TaskUpdate>();
+  for (const item of raw.slice(0, 60)) {
+    const p = taskUpdateSchema.safeParse(item);
+    if (!p.success || p.data.task > taskCount) continue;
+    const u: TaskUpdate = { task: p.data.task };
+    if (p.data.title) u.title = p.data.title;
+    if (p.data.status) {
+      const s = findStatus(config, p.data.status);
+      if (s) u.status = s;
+    }
+    if (p.data.priority) u.priority = p.data.priority;
+    if (p.data.dueDate) u.dueDate = p.data.dueDate;
+    if (p.data.assigneeIds) {
+      const ids = p.data.assigneeIds.map((a) => findMember(config, a)).filter((a): a is string => !!a);
+      if (ids.length || p.data.assigneeIds.length === 0) u.assigneeIds = [...new Set(ids)];
+    }
+    if (Object.keys(u).length > 1) byTask.set(u.task, { ...byTask.get(u.task), ...u });
+  }
+  return [...byTask.values()];
 }
 
 /** Read the edit's new tasks, fixing people/status references and dropping anything unusable. */
@@ -277,13 +306,13 @@ export async function runEdit(input: { instruction: string; config: WorkspaceCon
             ? "Ei request ta ekhonkar component diye shorasori kora jabe na. Nicher alternative gulo try korun."
             : "This request can't be built with the current components. Here's why, and what you can do instead."
         : m.message;
-      return { mode: "demo", message, summary: [], config: null, warnings: [], steps, unsupported, suggestions, newTasks: [] };
+      return { mode: "demo", message, summary: [], config: null, warnings: [], steps, unsupported, suggestions, newTasks: [], taskUpdates: [] };
     }
     const v = validateConfig(m.config);
     if (!v.ok) throw new PipelineError("Demo edit produced an invalid config", "validation", v.errors);
     steps.push({ id: "zod", label: "Zod schema validation", ms: tick(), detail: "passed" });
     steps.push({ id: "registry", label: "Component registry validation", ms: tick() });
-    return { mode: "demo", message: m.message, summary: m.summary, config: { ...v.config!, seed: undefined }, warnings: v.warnings, steps, unsupported, suggestions, newTasks: [] };
+    return { mode: "demo", message: m.message, summary: m.summary, config: { ...v.config!, seed: undefined }, warnings: v.warnings, steps, unsupported, suggestions, newTasks: [], taskUpdates: [] };
   }
   const messages: ChatMessage[] = [
     { role: "system", content: editSystemPrompt(language) },
@@ -292,8 +321,12 @@ export async function runEdit(input: { instruction: string; config: WorkspaceCon
   const meter = new UsageMeter();
   const { obj, config, warnings } = await askForConfig(messages, (o) => o.config, steps, tick, meter);
   const summary = Array.isArray(obj.summary) ? obj.summary.filter((s): s is string => typeof s === "string") : [];
-  const newTasks = readNewTasks(obj.newTasks, config ?? input.config);
-  return { mode: "live", message: typeof obj.message === "string" ? obj.message : "", summary, config: config ? { ...config, seed: undefined } : null, warnings, steps, ...readExtras(obj, warnings, language), newTasks, usage: meter.report() };
+  const base = config ?? input.config;
+  const newTasks = readNewTasks(obj.newTasks, base);
+  const taskUpdates = readTaskUpdates(obj.taskUpdates, base, input.existingTasks?.length ?? 0);
+  // task-only edits may send "config": null (far fewer tokens than repeating the whole config)
+  const out = config ?? (newTasks.length || taskUpdates.length ? input.config : null);
+  return { mode: "live", message: typeof obj.message === "string" ? obj.message : "", summary, config: out ? { ...out, seed: undefined } : null, warnings, steps, ...readExtras(obj, warnings, language), newTasks, taskUpdates, usage: meter.report() };
 }
 
 export interface WorklogResult {

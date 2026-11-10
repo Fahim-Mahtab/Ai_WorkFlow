@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { CalendarDays, Eye, ListTree, Minus, Pencil, Plus, ShieldCheck, SquareCheck } from "lucide-react";
-import type { SeedTask, Unsupported, Workspace, WorkspaceConfig } from "@/lib/config/types";
+import { ArrowRight, CalendarDays, Eye, ListTree, Minus, Pencil, Plus, ShieldCheck, SquareCheck } from "lucide-react";
+import type { SeedTask, Task, Unsupported, Workspace, WorkspaceConfig } from "@/lib/config/types";
 import { UnsupportedNotice } from "./capability-notice";
 import type { Change } from "@/lib/workspace/diff";
 import { isSignificant } from "@/lib/workspace/diff";
@@ -11,6 +11,12 @@ import { Badge } from "@/components/ui/primitives";
 import { DashboardCanvas } from "@/components/dashboard/dashboard-canvas";
 import { WorkspaceEnv } from "@/components/tasks/task-dialog-host";
 import { cn } from "@/lib/utils";
+
+/** An AI change to an existing task: the task as it is now, and the fields that change. */
+export interface TaskChange {
+  before: Task;
+  patch: Partial<Task>;
+}
 
 const KIND = {
   added: { icon: Plus, color: "green" as const, label: "Added" },
@@ -28,6 +34,7 @@ export function ChangePreviewDialog({
   warnings,
   unsupported = [],
   newTasks = [],
+  taskChanges = [],
   onApply,
 }: {
   open: boolean;
@@ -39,12 +46,24 @@ export function ChangePreviewDialog({
   warnings: string[];
   unsupported?: Unsupported[];
   newTasks?: SeedTask[];
+  taskChanges?: TaskChange[];
   onApply: () => void;
 }) {
   const [tab, setTab] = useState<"changes" | "preview">("changes");
   if (!next) return null;
   const significant = isSignificant(changes);
   const previewWs: Workspace = { ...workspace, config: next };
+  const people = (ids: string[]) => ids.map((id) => next.team.members.find((m) => m.id === id)?.name ?? id).join(", ") || "Unassigned";
+  const statusLabel = (id: string) => next.taskStatuses.find((s) => s.id === id)?.label ?? id;
+  const taskDiffs = (c: TaskChange) =>
+    [
+      c.patch.status !== undefined && ["Status", statusLabel(c.before.status), statusLabel(c.patch.status)],
+      c.patch.assigneeIds !== undefined && ["People", people(c.before.assigneeIds), people(c.patch.assigneeIds)],
+      c.patch.dueDate !== undefined && ["Deadline", c.before.dueDate ?? "none", c.patch.dueDate ?? "none"],
+      c.patch.priority !== undefined && ["Priority", c.before.priority, c.patch.priority],
+      c.patch.title !== undefined && ["Title", c.before.title, c.patch.title],
+    ].filter((d): d is string[] => !!d);
+  const total = changes.length + newTasks.length + taskChanges.length;
   const changedPage = next.pages.find((p) => changes.some((c) => c.area === "widget" && c.kind !== "removed" && p.widgets.some((w) => w.title === c.label)))?.id;
 
   return (
@@ -62,7 +81,7 @@ export function ChangePreviewDialog({
           {(["changes", "preview"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={cn("flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5", tab === t ? "bg-card font-medium shadow-xs" : "text-muted-foreground")}>
               {t === "changes" ? <ListTree className="size-4" /> : <Eye className="size-4" />}
-              {t === "changes" ? `Changes (${changes.length + newTasks.length})` : "Live preview"}
+              {t === "changes" ? `Changes (${total})` : "Live preview"}
             </button>
           ))}
         </div>
@@ -94,8 +113,31 @@ export function ChangePreviewDialog({
                   </ul>
                 </div>
               )}
+              {taskChanges.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Task updates ({taskChanges.length})</p>
+                  <ul className="divide-y rounded-lg border">
+                    {taskChanges.map((c) => (
+                      <li key={c.before.id} className="flex items-start gap-3 px-3 py-2 text-sm">
+                        <Pencil className="mt-0.5 size-4 shrink-0 text-primary" />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium">{c.before.title}</p>
+                          {taskDiffs(c).map(([field, from, to]) => (
+                            <p key={field} className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                              <span>{field}:</span>
+                              <span className="line-through">{from}</span>
+                              <ArrowRight className="size-3" />
+                              <span className="font-medium text-foreground">{to}</span>
+                            </p>
+                          ))}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {changes.length === 0 ? (
-                newTasks.length === 0 && <p className="text-sm text-muted-foreground">No structural differences detected.</p>
+                total === 0 && <p className="text-sm text-muted-foreground">No structural differences detected.</p>
               ) : (
                 <ul className="divide-y rounded-lg border">
                   {changes.map((c, i) => {

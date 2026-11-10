@@ -265,6 +265,17 @@ export const seedTaskSchema = z.object({
   custom: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 
+/** A change to an existing task, which the AI names by its #number in the EXISTING TASKS list. */
+export const taskUpdateSchema = z.object({
+  task: z.coerce.number().int().min(1),
+  title: z.string().min(1).max(160).optional().catch(undefined),
+  status: z.string().optional().catch(undefined),
+  priority: priorityIdSchema.optional().catch(undefined),
+  /** the full new list of people (replaces the old one) */
+  assigneeIds: z.array(z.string()).max(10).optional().catch(undefined),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().catch(undefined),
+});
+
 export const seedSchema = z.object({
   tasks: z.array(seedTaskSchema).max(30).optional(),
   records: z.record(z.array(z.record(z.unknown())).max(30)).optional(),

@@ -12,9 +12,10 @@ import { useStore, useWorkspaceActions } from "@/lib/workspace/store";
 import { aiClient, ApiError } from "@/lib/ai/client";
 import { diffConfigs, type Change } from "@/lib/workspace/diff";
 import { loadChat, saveChat, type ChatEntry } from "@/lib/storage/local";
-import type { SeedTask, Unsupported, WorkspaceConfig } from "@/lib/config/types";
+import type { SeedTask, Task, Unsupported, WorkspaceConfig } from "@/lib/config/types";
 import { seedToTask } from "@/lib/workspace/factory";
-import { taskLines } from "@/lib/workspace/task-lines";
+import { TASK_LINE_MAX, taskLines } from "@/lib/workspace/task-lines";
+import type { TaskChange } from "./change-preview-dialog";
 import { SuggestionChips, UnsupportedNotice } from "./capability-notice";
 import { UsageBadge, UsageTotalPill, useUsageTotals } from "./usage-badge";
 import { SAMPLE_EDITS } from "@/lib/workspace/demos";
@@ -34,6 +35,7 @@ interface Pending {
   unsupported: Unsupported[];
   suggestions: string[];
   newTasks: SeedTask[];
+  taskChanges: TaskChange[];
 }
 
 export function AssistantPanel({ onClose }: { onClose: () => void }) {
@@ -76,7 +78,9 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
     setError(null);
     setBusy("edit");
     try {
-      const r = await aiClient.edit({ instruction, config: active.config, existingTasks: taskLines(active.data.tasks, active.config), forceDemo }, active.id);
+      // the AI names existing tasks by their #number in this list, so keep the same order to map them back
+      const listed = active.data.tasks.slice(0, TASK_LINE_MAX);
+      const r = await aiClient.edit({ instruction, config: active.config, existingTasks: taskLines(listed, active.config), forceDemo }, active.id);
       const extras = { unsupported: r.unsupported ?? [], suggestions: r.suggestions ?? [], usage: r.usage ?? null };
       if (!r.config) {
         push({ role: "assistant", text: r.message || "I couldn't produce a change for that.", ...extras });
@@ -84,12 +88,23 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
       }
       const changes = diffConfigs(active.config, r.config);
       const newTasks = r.newTasks ?? [];
-      if (changes.length === 0 && newTasks.length === 0) {
+      const taskChanges = (r.taskUpdates ?? []).flatMap((u): TaskChange[] => {
+        const before = listed[u.task - 1];
+        if (!before) return [];
+        const patch: Partial<Task> = {};
+        if (u.title && u.title !== before.title) patch.title = u.title;
+        if (u.status && u.status !== before.status) patch.status = u.status;
+        if (u.priority && u.priority !== before.priority) patch.priority = u.priority;
+        if (u.dueDate && u.dueDate !== before.dueDate) patch.dueDate = u.dueDate;
+        if (u.assigneeIds && [...u.assigneeIds].sort().join() !== [...before.assigneeIds].sort().join()) patch.assigneeIds = u.assigneeIds;
+        return Object.keys(patch).length ? [{ before, patch }] : [];
+      });
+      if (changes.length === 0 && newTasks.length === 0 && taskChanges.length === 0) {
         push({ role: "assistant", text: r.message || (extras.unsupported.length ? "" : "Nothing needed to change."), ...extras });
         return;
       }
       push({ role: "assistant", text: `${r.message}${r.summary.length ? "\n• " + r.summary.join("\n• ") : ""}${r.mode === "demo" ? "\n(demo mode)" : ""}`, ...extras });
-      setPending({ next: r.config, changes, summary: r.summary, warnings: r.warnings, instruction, unsupported: extras.unsupported, suggestions: extras.suggestions, newTasks });
+      setPending({ next: r.config, changes, summary: r.summary, warnings: r.warnings, instruction, unsupported: extras.unsupported, suggestions: extras.suggestions, newTasks, taskChanges });
     } catch (e) {
       setError({ err: e instanceof ApiError ? e : new ApiError(String(e), "unknown"), stage: "edit", text: instruction });
     } finally {
@@ -141,6 +156,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
       void _id; void _c; void _u;
       actions.addTask(task);
     }
+    for (const c of pending.taskChanges) actions.updateTask(c.before.id, c.patch);
     toast.success("Changes applied");
     // carry the suggestions forward so the user can keep refining with one click
     push({ role: "assistant", text: "✓ Applied.", suggestions: pending.suggestions });
@@ -256,6 +272,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
             warnings={pending?.warnings ?? []}
             unsupported={pending?.unsupported ?? []}
             newTasks={pending?.newTasks ?? []}
+            taskChanges={pending?.taskChanges ?? []}
             onApply={apply}
           />
         </>
