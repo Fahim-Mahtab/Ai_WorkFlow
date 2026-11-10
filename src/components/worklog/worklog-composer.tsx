@@ -12,6 +12,7 @@ import { UsageBadge } from "@/components/ai/usage-badge";
 import { useWorkspaceActions } from "@/lib/workspace/store";
 import { Button } from "@/components/ui/button";
 import { Badge, Checkbox, Input, NativeSelect, Textarea } from "@/components/ui/primitives";
+import { VoiceButton } from "@/components/ai/voice-button";
 import { makeT } from "@/lib/i18n";
 import { todayISO } from "@/lib/utils";
 import { WORKLOG_SAMPLES } from "@/lib/workspace/demos";
@@ -73,7 +74,10 @@ export function WorklogComposer({ workspace, readOnly, showSamples }: { workspac
         </NativeSelect>
         <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={readOnly} className="sm:w-40" aria-label={t("date")} />
       </div>
-      <Textarea rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder={t("describeWork")} disabled={readOnly || loading} />
+      <div className="relative">
+        <Textarea rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder={t("describeWork")} disabled={readOnly || loading} className="pb-10" />
+        {!readOnly && <VoiceButton value={text} onChange={setText} disabled={loading} className="absolute bottom-1.5 left-1.5" />}
+      </div>
       {showSamples && !readOnly && (
         <div className="flex flex-wrap gap-1.5">
           {WORKLOG_SAMPLES.map((s) => (

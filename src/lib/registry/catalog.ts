@@ -33,6 +33,7 @@ export const CATALOG: Record<WidgetType, CatalogEntry> = {
   activity: { type: "activity", label: "Activity feed", description: "Latest changes in this workspace.", category: "Other", defaultWidth: 2, sourceKind: "none" },
   progress: { type: "progress", label: "Progress indicator", description: "Completion %, target progress or per-member progress.", category: "Data", defaultWidth: 2, sourceKind: "any" },
   attachments: { type: "attachments", label: "Files & links", description: "Shared links and file references.", category: "Other", defaultWidth: 2, sourceKind: "none" },
+  workload: { type: "workload", label: "Team workload", description: "Each person's open work, late and at-risk deadlines, and logged hours.", category: "Tasks", defaultWidth: 2, sourceKind: "none" },
   worklog: { type: "worklog", label: "Daily work report", description: "Natural-language self-reporting with AI extraction.", category: "Input", defaultWidth: 2, sourceKind: "none" },
 };
 
@@ -82,6 +83,8 @@ export function createDefaultWidget(type: WidgetType, config: WorkspaceConfig, s
       return { ...base, type };
     case "worklog":
       return { ...base, type, showRecent: 5 };
+    case "workload":
+      return { ...base, type };
   }
 }
 

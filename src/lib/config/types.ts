@@ -99,6 +99,8 @@ export interface Task {
   links: LinkRef[];
   custom: Record<string, FieldValue>;
   kind: "assigned" | "self";
+  /** deadline rules that already ran for this task ("ruleId@dueDate"), so they run once */
+  firedRules?: string[];
 }
 
 export interface RecordRow {
@@ -123,7 +125,7 @@ export interface ActivityItem {
   id: string;
   at: string;
   text: string;
-  kind: "task" | "record" | "worklog" | "config" | "comment" | "system";
+  kind: "task" | "record" | "worklog" | "config" | "comment" | "system" | "rule";
 }
 
 export interface Attachment extends LinkRef {
@@ -147,6 +149,10 @@ export interface Workspace {
   isDemo?: boolean;
   config: WorkspaceConfig;
   data: WorkspaceData;
+  /** plain-language automations (kept outside config so AI layout edits can never drop them) */
+  rules?: import("../automation/rules").Rule[];
+  /** saved task views */
+  views?: import("../views/views").SavedView[];
 }
 
 /** Row shape consumed by the data engine (tables, charts, metrics). */

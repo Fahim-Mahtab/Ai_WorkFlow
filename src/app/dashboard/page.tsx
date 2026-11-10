@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Check, Pencil, Sparkles } from "lucide-react";
+import { Check, ClipboardCheck, Pencil, Sparkles } from "lucide-react";
+import { BriefingDialog } from "@/components/ai/briefing-dialog";
 import { RequireWorkspace, PageHeader } from "@/components/layout/page-header";
 import { DashboardCanvas } from "@/components/dashboard/dashboard-canvas";
 import { WorkspaceEnv } from "@/components/tasks/task-dialog-host";
@@ -13,6 +14,7 @@ import type { Workspace } from "@/lib/config/types";
 function DashboardView({ workspace }: { workspace: Workspace }) {
   const [editing, setEditing] = useState(false);
   const [pageId, setPageId] = useState<string | undefined>(undefined);
+  const [briefing, setBriefing] = useState(false);
   const actions = useWorkspaceActions(workspace.id);
   const { setOpen } = useAssistant();
   return (
@@ -27,6 +29,9 @@ function DashboardView({ workspace }: { workspace: Workspace }) {
         description={workspace.config.description}
         actions={
           <>
+            <Button variant="outline" size="sm" onClick={() => setBriefing(true)}>
+              <ClipboardCheck /> Briefing
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
               <Sparkles /> Modify with AI
             </Button>
@@ -41,6 +46,7 @@ function DashboardView({ workspace }: { workspace: Workspace }) {
           Edit mode — drag widgets by the handle, use ⚙ to configure, resize or remove; double-click a page tab to rename; add pages and widgets. Changes save automatically.
         </div>
       )}
+      <BriefingDialog workspace={workspace} open={briefing} onOpenChange={setBriefing} />
       <WorkspaceEnv workspace={workspace}>
         <DashboardCanvas
           workspace={workspace}

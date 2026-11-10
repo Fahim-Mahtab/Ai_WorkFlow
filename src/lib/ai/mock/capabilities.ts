@@ -90,11 +90,11 @@ const RULES: Rule[] = [
     }),
   },
   {
-    re: /auto.?assign|automatic(ally)?|automation|স্বয়ংক্রিয়|schedule job|cron|প্রতি মাসে নিজে/i,
+    re: /schedule job|cron|প্রতি মাসে নিজে/i,
     build: (l) => ({
       request: say(l, "স্বয়ংক্রিয় কাজ বণ্টন / অটোমেশন", "Auto assign / automation", "Automatic assignment / automation"),
-      reason: say(l, "নিয়মভিত্তিক অটোমেশন এখনও নেই।", "Rule-based automation ekhono nai.", "Rule-based automation isn't supported yet."),
-      alternative: say(l, "কাজের বোর্ড থেকে ড্র্যাগ করে বা টাস্ক খুলে দ্রুত দায়িত্ব দিন; সদস্যভিত্তিক অগ্রগতি চার্টে কাজের চাপ দেখুন।", "Task board theke drag kore ba task khule assign korun; member-wise progress chart e workload dekhun.", "Assign quickly from the task board, and watch workload in the per-member progress chart."),
+      reason: say(l, "সময়সূচি ধরে চালানো কাজ এখনও নেই।", "Schedule kore chalano job ekhono nai.", "Scheduled jobs aren't supported yet."),
+      alternative: say(l, "টাস্কের নিয়ম (ডেডলাইন, স্ট্যাটাস, দায়িত্ব) অটোমেশন পেজে লিখুন।", "Task er rule (deadline, status, assign) Automations page e likhun.", "Write task rules (deadlines, status, assignment) on the Automations page."),
     }),
   },
   {

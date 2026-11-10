@@ -49,7 +49,8 @@ const responseSchema = z.object({
 
 const CAPABILITIES = `What the platform can build: pages with metric cards, tables, task boards (kanban), task lists, data-entry forms with fields (text, number, date, select, phone, email, member…), bar/line/pie charts (daily/weekly/monthly), calendars, progress bars, activity feed, file/link references, and daily self-reported work logs. Tasks have statuses, priorities, assignees, deadlines, subtasks and comments. People are team members with roles.
 Creating and assigning tasks (title, people, deadline, description) IS possible, and so is changing existing tasks (move to another status, reassign, new deadline, priority): treat both as an "edit".
-It CANNOT: send SMS/email/notifications, take payments, user logins/permissions, real file upload, PDF/Excel export, maps, Gantt charts, integrations or automation. Say so briefly only if the user asks for these, and offer the closest alternative.`;
+Also built in (not edits, point the user to them): the Automations page (plain-language rules such as "deadline par hole priority urgent koro" or "Review e gele Fahim ke assign koro", with in-app notifications in the bell), the Briefing button on the dashboard (late work, at-risk deadlines, workload, next steps), saved views and a Workload tab on the Tasks page, and a mic button for speaking in Bangla or English. A "Team workload" widget can be added to a dashboard as an edit.
+It CANNOT: send SMS/email/WhatsApp, take payments, user logins/permissions, real file upload, PDF/Excel export, maps, Gantt charts, or connect to other software. Say so briefly only if the user asks for these, and offer the closest alternative.`;
 
 function intakePrompt(lang: Language): string {
   return `You are a friendly work-setup consultant inside a work-management app used by offices in Bangladesh. You are talking with the user to understand their needs BEFORE building their workspace (dashboard).

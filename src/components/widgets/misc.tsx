@@ -1,7 +1,7 @@
 "use client";
 /** Calendar, activity feed, progress indicators and file/link attachments. */
 import { useMemo, useState } from "react";
-import { Activity as ActivityIcon, ChevronLeft, ChevronRight, ClipboardList, FileText, Link2, MessageSquare, Paperclip, Settings2, Trash2, Zap } from "lucide-react";
+import { Activity as ActivityIcon, ChevronLeft, ChevronRight, ClipboardList, FileText, Link2, MessageSquare, Paperclip, Settings2, Trash2, Workflow, Zap } from "lucide-react";
 import type { ActivityItem, WidgetOf } from "@/lib/config/types";
 import { useEnv } from "@/components/dashboard/env";
 import { getRows, getSource } from "@/lib/engine/sources";
@@ -97,6 +97,7 @@ const ACT_ICON: Record<ActivityItem["kind"], React.ReactNode> = {
   config: <Settings2 />,
   comment: <MessageSquare />,
   system: <ActivityIcon />,
+  rule: <Workflow />,
 };
 
 export function ActivityWidget({ widget }: { widget: WidgetOf<"activity"> }) {

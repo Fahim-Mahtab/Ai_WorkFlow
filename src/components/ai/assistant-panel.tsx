@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Badge, Textarea } from "@/components/ui/primitives";
 import { useAssistant } from "@/components/layout/providers";
 import { ChangePreviewDialog } from "./change-preview-dialog";
+import { VoiceButton } from "./voice-button";
 import { EDIT_STEPS, GenerationProgress } from "./generation-progress";
 import { cn, nowISO, uid } from "@/lib/utils";
 
@@ -254,9 +255,10 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
                   }
                 }}
                 placeholder="Ask or tell me what you need…"
-                className="resize-none pr-11"
+                className="resize-none pb-10 pr-11"
                 disabled={!!busy}
               />
+              <VoiceButton value={input} onChange={setInput} disabled={!!busy} className="absolute bottom-1.5 left-1.5" />
               <Button type="submit" size="iconSm" className="absolute bottom-2 right-2" disabled={!!busy || !input.trim()} aria-label="Send">
                 {busy ? <Loader2 className="animate-spin" /> : <ArrowUp />}
               </Button>

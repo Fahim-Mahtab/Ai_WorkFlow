@@ -35,6 +35,7 @@ const TYPE_ALIASES: Record<string, string> = {
   progress_bar: "progress", progressbar: "progress",
   files: "attachments", links: "attachments",
   daily_report: "worklog", work_log: "worklog", worklogs: "worklog",
+  team_workload: "workload", capacity: "workload", load: "workload",
 };
 
 const WIDTHS: Record<string, number> = { full: 4, wide: 3, large: 3, half: 2, medium: 2, small: 1, quarter: 1 };

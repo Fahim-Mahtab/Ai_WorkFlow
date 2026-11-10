@@ -12,6 +12,7 @@ import { SAMPLE_PROMPTS } from "@/lib/workspace/demos";
 import { Button } from "@/components/ui/button";
 import { Card, Textarea } from "@/components/ui/primitives";
 import { UsageBadge } from "./usage-badge";
+import { VoiceButton } from "./voice-button";
 import { cn } from "@/lib/utils";
 
 export interface IntakeMessage {
@@ -184,9 +185,10 @@ export function IntakeChat({ disabled, onBuild }: { disabled?: boolean; onBuild:
               }
             }}
             placeholder={messages.length ? "Type response or prompt…" : "Describe what you need in বাংলা, Banglish or English…"}
-            className="resize-none bg-card/80 backdrop-blur-md pr-11 transition-all focus:ring-2 focus:ring-primary/40"
+            className="resize-none bg-card/80 backdrop-blur-md pb-10 pr-11 transition-all focus:ring-2 focus:ring-primary/40"
             disabled={busy || disabled}
           />
+          <VoiceButton value={input} onChange={setInput} disabled={busy || disabled} className="absolute bottom-1.5 left-1.5" />
           <Button type="submit" size="iconSm" className="absolute bottom-2.5 right-2.5 shadow-md shadow-primary/20 transition-transform active:scale-95" disabled={busy || disabled || !input.trim()} aria-label="Send">
             {busy ? <Loader2 className="animate-spin" /> : <ArrowUp />}
           </Button>

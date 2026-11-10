@@ -229,6 +229,11 @@ export const worklogWidgetSchema = z.object({
   showRecent: z.number().int().min(0).max(30).optional(),
 });
 
+export const workloadWidgetSchema = z.object({
+  ...widgetBase,
+  type: z.literal("workload"),
+});
+
 export const widgetSchema = z.discriminatedUnion("type", [
   metricWidgetSchema,
   tableWidgetSchema,
@@ -243,6 +248,7 @@ export const widgetSchema = z.discriminatedUnion("type", [
   progressWidgetSchema,
   attachmentsWidgetSchema,
   worklogWidgetSchema,
+  workloadWidgetSchema,
 ]);
 
 export const pageSchema = z.object({

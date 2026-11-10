@@ -15,6 +15,8 @@ import type {
   WorkspaceConfig,
 } from "../config/types";
 import { deleteChat, loadState, saveState } from "../storage/local";
+import { runTaskRules, sweepTimeRules, type Rule, type RuleNote } from "../automation/rules";
+import type { SavedView } from "../views/views";
 import { nowISO, uid } from "../utils";
 
 interface StoreValue {
@@ -73,6 +75,26 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setWorkspaces((prev) => prev.map((w) => (w.id === id ? { ...fn(w), updatedAt: nowISO() } : w)));
   }, []);
 
+  // deadline rules (overdue / due soon): check on open and every minute
+  useEffect(() => {
+    if (!hydrated || !activeId) return;
+    const sweep = () =>
+      setWorkspaces((prev) => {
+        let changed = false;
+        const next = prev.map((w) => {
+          if (w.id !== activeId) return w;
+          const r = sweepTimeRules(w.rules, w.config, w.data.tasks);
+          if (!r) return w;
+          changed = true;
+          return { ...w, updatedAt: nowISO(), rules: countRuns(w.rules, r.fired), data: { ...withNotes(w.data, r.notes), tasks: r.tasks } };
+        });
+        return changed ? next : prev;
+      });
+    sweep();
+    const t = setInterval(sweep, 60_000);
+    return () => clearInterval(t);
+  }, [hydrated, activeId]);
+
   const value = useMemo<StoreValue>(
     () => ({
       hydrated,
@@ -104,6 +126,13 @@ const withActivity = (ws: Workspace, text: string, kind: ActivityItem["kind"]): 
   ...ws.data,
   activity: [activity(text, kind), ...ws.data.activity].slice(0, 200),
 });
+
+/** Write what rules did into the activity feed (the bell reads these). */
+const withNotes = (data: Workspace["data"], notes: RuleNote[]): Workspace["data"] =>
+  notes.length ? { ...data, activity: [...notes.map((n) => activity(n.text, "rule")), ...data.activity].slice(0, 200) } : data;
+
+const countRuns = (rules: Rule[] | undefined, fired: string[]): Rule[] | undefined =>
+  fired.length && rules ? rules.map((r) => (fired.includes(r.id) ? { ...r, runs: (r.runs ?? 0) + fired.filter((f) => f === r.id).length } : r)) : rules;
 
 /** Bound actions for the active workspace. */
 export function useWorkspaceActions(workspaceId?: string) {
@@ -139,13 +168,17 @@ export function useWorkspaceActions(workspaceId?: string) {
             createdAt: ts,
             updatedAt: ts,
           };
-          return { ...ws, data: { ...withActivity(ws, isBn(ws) ? `নতুন কাজ: ${task.title}` : `Task created: ${task.title}`, "task"), tasks: [task, ...ws.data.tasks] } };
+          const r = runTaskRules(ws.rules, ws.config, null, task);
+          const data = withNotes(withActivity(ws, isBn(ws) ? `নতুন কাজ: ${task.title}` : `Task created: ${task.title}`, "task"), r.notes);
+          return { ...ws, rules: countRuns(ws.rules, r.fired), data: { ...data, tasks: [r.task, ...ws.data.tasks] } };
         });
       },
       updateTask(taskId: string, patch: Partial<Task>, note?: string) {
         up((ws) => {
           const doneIds = new Set(ws.config.taskStatuses.filter((s) => s.isDone).map((s) => s.id));
           let text = note;
+          let notes: RuleNote[] = [];
+          let fired: string[] = [];
           const tasks = ws.data.tasks.map((t) => {
             if (t.id !== taskId) return t;
             const next = { ...t, ...patch, updatedAt: nowISO() };
@@ -154,9 +187,12 @@ export function useWorkspaceActions(workspaceId?: string) {
               const label = ws.config.taskStatuses.find((s) => s.id === patch.status)?.label ?? patch.status;
               text ??= isBn(ws) ? `"${t.title}" → ${label}` : `"${t.title}" moved to ${label}`;
             }
-            return next;
+            const r = runTaskRules(ws.rules, ws.config, t, next);
+            notes = r.notes;
+            fired = r.fired;
+            return r.task;
           });
-          return { ...ws, data: { ...(text ? withActivity(ws, text, "task") : ws.data), tasks } };
+          return { ...ws, rules: countRuns(ws.rules, fired), data: { ...withNotes(text ? withActivity(ws, text, "task") : ws.data, notes), tasks } };
         });
       },
       deleteTask(taskId: string) {
@@ -208,6 +244,12 @@ export function useWorkspaceActions(workspaceId?: string) {
       },
       removeAttachment(attId: string) {
         up((ws) => ({ ...ws, data: { ...ws.data, attachments: ws.data.attachments.filter((a) => a.id !== attId) } }));
+      },
+      setRules(fn: (rules: Rule[]) => Rule[]) {
+        up((ws) => ({ ...ws, rules: fn(ws.rules ?? []) }));
+      },
+      setViews(fn: (views: SavedView[]) => SavedView[]) {
+        up((ws) => ({ ...ws, views: fn(ws.views ?? []) }));
       },
       log(text: string, kind: ActivityItem["kind"] = "system") {
         up((ws) => ({ ...ws, data: withActivity(ws, text, kind) }));

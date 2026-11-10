@@ -2,12 +2,14 @@
 /** Browser-side calls to our own Next.js API routes (the API key never reaches the browser). */
 import type { EditResult, GenerateResult, WorklogResult } from "./pipeline";
 import type { ChatResult, ChatTurn } from "./chat";
+import type { BriefingResult, RuleResult } from "./assist";
+import type { BriefingFacts } from "../insights/briefing";
 import type { ProviderStatus } from "./providers";
 import type { UsageReport } from "./pricing";
 import type { WorkspaceConfig } from "../config/types";
 import { recordUsage } from "../storage/usage";
 
-export type { ChatResult, ChatTurn, EditResult, GenerateResult, ProviderStatus, UsageReport, WorklogResult };
+export type { BriefingResult, ChatResult, ChatTurn, EditResult, RuleResult, GenerateResult, ProviderStatus, UsageReport, WorklogResult };
 
 export class ApiError extends Error {
   constructor(
@@ -55,5 +57,7 @@ export const aiClient = {
   /** workspaceId null = intake chat before a workspace exists (usage is attached on approval). */
   chat: (body: { mode: "intake" | "workspace"; messages: ChatTurn[]; config?: WorkspaceConfig; existingTasks?: string[]; forceDemo?: boolean }, workspaceId: string | null) =>
     post<ChatResult>("/api/ai/chat", body, workspaceId, 90_000),
+  rule: (body: { text: string; config: WorkspaceConfig; forceDemo?: boolean }, workspaceId: string) => post<RuleResult>("/api/ai/rule", body, workspaceId, 60_000),
+  briefing: (body: { facts: BriefingFacts; forceDemo?: boolean }, workspaceId: string) => post<BriefingResult>("/api/ai/briefing", body, workspaceId, 60_000),
   worklog: (body: { text: string; forceDemo?: boolean }, workspaceId: string) => post<WorklogResult>("/api/ai/worklog", body, workspaceId, 90_000),
 };

@@ -48,6 +48,7 @@ Widget = common { "id": slug, "type", "title": string, "description"?: string, "
 - progress:   { "source", "mode": "completion" (tasks only: done/total) | "target" (count vs target) | "byMember" (per assignee/creator), "target"?: number, "dateRange"? }
 - attachments:{ }                                           (shared files/links)
 - worklog:    { "showRecent"?: number }                     (employees describe today's work in natural language; AI splits it into entries)
+- workload:   { }                                           (each person's open tasks by status, late / at-risk deadlines, hours logged; use for "who has how much work", capacity, overload)
 Filter = { "field": field id, "op": "eq"|"neq"|"contains"|"empty"|"notEmpty"|"gt"|"lt", "value"?: string|number|boolean }
 
 COMPONENT REGISTRY (the ONLY allowed widget types):

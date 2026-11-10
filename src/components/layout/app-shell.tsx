@@ -3,10 +3,11 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { BarChart3, Check, ChevronsUpDown, LayoutDashboard, ListChecks, Menu, Moon, Plus, Settings, Sparkles, Sun, Users, Wand2, X } from "lucide-react";
+import { BarChart3, Check, ChevronsUpDown, LayoutDashboard, ListChecks, Menu, Moon, Plus, Settings, Sparkles, Sun, Users, Wand2, Workflow, X } from "lucide-react";
 import { useStore } from "@/lib/workspace/store";
 import { useAssistant } from "./providers";
 import { AssistantPanel } from "@/components/ai/assistant-panel";
+import { NotificationBell } from "./notification-bell";
 import { UsageTotalPill, useUsageTotals } from "@/components/ai/usage-badge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/primitives";
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tasks", label: "Tasks & Work log", icon: ListChecks },
+  { href: "/automations", label: "Automations", icon: Workflow },
   { href: "/team", label: "Team", icon: Users },
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -153,6 +155,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Badge>
           )}
           <span className="hidden sm:inline-flex"><UsageTotalPill totals={allUsage.all} title="Total AI spend in this browser" /></span>
+          <NotificationBell />
           <ThemeToggle />
           <Button variant={open ? "secondary" : "default"} size="sm" className="rounded-full px-4" onClick={() => setOpen(!open)}>
             <Sparkles /> AI Assistant
