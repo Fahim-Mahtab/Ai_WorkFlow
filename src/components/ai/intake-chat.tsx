@@ -47,7 +47,15 @@ export const clearIntake = () => {
   }
 };
 
-export function IntakeChat({ disabled, onBuild }: { disabled?: boolean; onBuild: (brief: string, transcript: IntakeMessage[]) => void }) {
+export function IntakeChat({
+  disabled,
+  forceDemo = true,
+  onBuild,
+}: {
+  disabled?: boolean;
+  forceDemo?: boolean;
+  onBuild: (brief: string, transcript: IntakeMessage[]) => void;
+}) {
   const [messages, setMessages] = useState<IntakeMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -70,11 +78,11 @@ export function IntakeChat({ disabled, onBuild }: { disabled?: boolean; onBuild:
   const ready = lastAssistant?.intent === "build" && !!lastAssistant.brief && messages[messages.length - 1] === lastAssistant;
   const userText = messages.filter((m) => m.role === "user").map((m) => m.text).join("\n");
 
-  const talk = async (history: IntakeMessage[], forceDemo = false) => {
+  const talk = async (history: IntakeMessage[], demo = forceDemo) => {
     setBusy(true);
     setError(null);
     try {
-      const r = await aiClient.chat({ mode: "intake", messages: history.map((m) => ({ role: m.role, content: m.text })), forceDemo }, null);
+      const r = await aiClient.chat({ mode: "intake", messages: history.map((m) => ({ role: m.role, content: m.text })), forceDemo: demo }, null);
       const next = [...history, { role: "assistant" as const, text: r.reply, quickReplies: r.quickReplies, intent: r.intent, brief: r.brief, usage: r.usage ?? null }];
       setMessages(next);
       save(next);
@@ -92,7 +100,7 @@ export function IntakeChat({ disabled, onBuild }: { disabled?: boolean; onBuild:
     setMessages(next);
     save(next);
     setInput("");
-    talk(next);
+    talk(next, forceDemo);
   };
 
   const reset = () => {
@@ -105,7 +113,7 @@ export function IntakeChat({ disabled, onBuild }: { disabled?: boolean; onBuild:
 
   return (
     <Card className="overflow-hidden">
-      <div ref={scroller} className="max-h-[52vh] min-h-40 space-y-3 overflow-y-auto p-4 scrollbar-thin sm:p-5">
+      <div ref={scroller} className="max-h-[52vh] space-y-3 overflow-y-auto p-4 scrollbar-thin sm:p-5">
         <Bubble role="assistant">
           Describe the work you want to manage. I&apos;ll assemble your workspace.
           <span className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">

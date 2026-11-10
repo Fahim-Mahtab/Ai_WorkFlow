@@ -32,9 +32,18 @@ export function applyFilter(rows: FlatRow[], filter?: Filter): FlatRow[] {
       case "notEmpty":
         return !(v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0));
       case "gt":
-        return Number(v) > Number(value);
-      case "lt":
-        return Number(v) < Number(value);
+      case "lt": {
+        // dates (YYYY-MM-DD, or the word "today") compare as dates; everything else as numbers
+        const target = value === "today" ? todayISO() : value;
+        const isDate = (x: unknown) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}/.test(x);
+        if (isDate(target)) {
+          if (!isDate(v)) return false;
+          const a = String(v).slice(0, 10);
+          return op === "gt" ? a > String(target) : a < String(target);
+        }
+        if (v === undefined || v === null || v === "") return false;
+        return op === "gt" ? Number(v) > Number(target) : Number(v) < Number(target);
+      }
       default:
         return true;
     }

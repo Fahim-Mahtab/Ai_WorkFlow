@@ -53,7 +53,7 @@ function TasksInner() {
         actions={<Button size="sm" onClick={() => newTask()}><Plus /> New task</Button>}
       />
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex gap-1 overflow-x-auto rounded-lg bg-muted p-1 scrollbar-thin">
+        <div className="flex max-w-full gap-1 overflow-x-auto rounded-lg bg-muted p-1 scrollbar-none">
           {tabs.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setView(id)} className={cn("flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm", view === id ? "bg-card font-medium shadow-xs" : "text-muted-foreground hover:text-foreground")}>
               <Icon className="size-4" /> {label}

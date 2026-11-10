@@ -28,7 +28,6 @@ function AssistantProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<ProviderStatus | null>(null);
   useEffect(() => {
     aiClient.status().then(setStatus).catch(() => setStatus({ mode: "demo", provider: "mock", model: "unreachable" }));
-    if (window.matchMedia("(min-width: 1280px)").matches) setOpen(true);
   }, []);
   const ask = useCallback((text: string) => {
     setPrefill(text);
@@ -39,7 +38,7 @@ function AssistantProvider({ children }: { children: ReactNode }) {
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
       <WorkspaceProvider>
         <ConfirmProvider>
           <AssistantProvider>

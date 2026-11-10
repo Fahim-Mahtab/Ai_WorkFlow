@@ -1,149 +1,156 @@
 "use client";
+import React, { useRef } from "react";
 import Link from "next/link";
-import { Boxes, ChevronRight, Layers, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, ChevronRight, Sparkles } from "lucide-react";
+import { HeroNavbar } from "@/components/home/hero-navbar";
+import { Hero3DShowcase } from "@/components/home/hero-3d-showcase";
+import { DotDistortionShader } from "@/components/ui/dot-distortion-shader";
 import { WorkspaceGenerator } from "@/components/ai/workspace-generator";
 import { useStore } from "@/lib/workspace/store";
-import { Badge, Card } from "@/components/ui/primitives";
+import { Badge } from "@/components/ui/primitives";
+import { ImportWorkspaceButton } from "@/components/layout/import-workspace-button";
 
 export default function HomePage() {
   const { workspaces, setActive } = useStore();
+  const generatorRef = useRef<HTMLDivElement>(null);
+
+  const scrollToGenerator = () => {
+    generatorRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
-    <div className="relative mx-auto max-w-6xl space-y-12 px-4 py-8 sm:px-6 sm:py-12">
-      {/* 3D Atmospheric Ambient Lighting */}
+    <div className="dark relative min-h-screen bg-[#06080e] text-white selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
+      {/* Floating Pill Glass Navbar */}
+      <HeroNavbar onGetStarted={scrollToGenerator} />
+
+      {/* Atmospheric Background Glows */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-[500px] w-full max-w-4xl -translate-x-1/2 opacity-60 blur-3xl"
+        className="pointer-events-none absolute right-0 top-0 -z-10 h-[800px] w-full max-w-5xl opacity-80 blur-3xl"
         style={{
-          background: "radial-gradient(ellipse at 50% 20%, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.12) 40%, transparent 70%)",
+          background:
+            "radial-gradient(ellipse at 75% 30%, rgba(34, 211, 238, 0.16), rgba(147, 51, 234, 0.14) 40%, transparent 70%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-48 top-96 -z-10 size-[600px] opacity-30 blur-3xl"
+        style={{
+          background: "radial-gradient(circle, rgba(79, 70, 229, 0.25), transparent 70%)",
         }}
       />
 
-      {/* Hero Header with 3D Spatial Framing */}
-      <section className="relative space-y-5 text-center sm:text-left">
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary shadow-sm shadow-primary/10 backdrop-blur-md">
-            <Sparkles className="size-3.5 animate-pulse text-primary" />
-            <span>AI Dynamic Work Platform</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className="rounded-md border bg-card/60 px-2 py-0.5 font-medium shadow-xs">বাংলা</span>
-            <span className="rounded-md border bg-card/60 px-2 py-0.5 font-medium shadow-xs">Banglish</span>
-            <span className="rounded-md border bg-card/60 px-2 py-0.5 font-medium shadow-xs">English</span>
-          </div>
-        </div>
-
-        <div className="grid items-center gap-8 lg:grid-cols-12">
-          <div className="space-y-4 lg:col-span-7">
-            <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl lg:text-5xl text-foreground">
-              Work at the Speed of{" "}
-              <span className="bg-gradient-to-r from-primary via-indigo-500 to-purple-500 bg-clip-text text-transparent">
-                Natural Thought
-              </span>
-            </h1>
-            <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
-              Speak your requirement. AI constructs functional, editable dashboards in real time — with zero code generation.
-            </p>
-          </div>
-
-          {/* 3D Interactive Floating Mockup */}
-          <div className="perspective-1000 hidden lg:col-span-5 lg:block">
-            <div className="preserve-3d relative flex h-48 w-full items-center justify-center">
-              {/* Backglow Aura */}
-              <div className="animate-pulse-ring absolute size-44 rounded-full bg-primary/20 blur-2xl" />
-
-              {/* Floating 3D Kanban Card */}
-              <div className="card-3d animate-float-slow glass-panel absolute -left-2 top-2 z-20 w-52 rounded-xl p-3 shadow-xl">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-semibold text-primary">Sprint Board</span>
-                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500">Live</span>
-                </div>
-                <p className="mt-2 text-xs font-medium">Data Entry Verification</p>
-                <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
-                  <span>12 Operators</span>
-                  <span className="flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white">✓</span>
-                </div>
+      {/* ========================================================================= */}
+      {/* HERO SECTION: Interactive Dot Distortion Shader (Aceternity UI Style)     */}
+      {/* ========================================================================= */}
+      <DotDistortionShader
+        gap={28}
+        dotSize={1.5}
+        mouseRadius={160}
+        distortionStrength={44}
+        returnSpeed={0.08}
+        baseColor="rgba(148, 163, 184, 0.3)"
+        activeColor="rgba(34, 211, 238, 0.95)"
+        pulseColor="rgba(168, 85, 247, 0.75)"
+        glow={true}
+        className="w-full pt-28 pb-16 sm:pt-32"
+      >
+        <section className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-8">
+            {/* Hero Left Column */}
+            <div className="space-y-6 lg:col-span-6 xl:col-span-5">
+              {/* Eyebrow Label */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1 text-xs font-semibold text-gray-300 backdrop-blur-md">
+                <span className="size-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_#22d3ee]" />
+                <span>Dynamic AI Workspaces · বাংলা, Banglish & English</span>
               </div>
 
-              {/* Floating 3D Metric Card */}
-              <div className="card-3d animate-float-delayed glass-panel absolute -bottom-2 -right-2 z-10 w-48 rounded-xl p-3 shadow-xl">
-                <div className="text-[11px] font-medium text-muted-foreground">Daily Progress</div>
-                <div className="mt-1 flex items-baseline gap-2">
-                  <span className="text-xl font-extrabold text-foreground">94.8%</span>
-                  <span className="text-[10px] font-semibold text-emerald-500">+12%</span>
-                </div>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div className="h-full w-[94%] rounded-full bg-gradient-to-r from-primary to-purple-500" />
-                </div>
+              {/* Main Headline (Aceternity Pro Style) */}
+              <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-5xl xl:text-6xl leading-[1.08]">
+                Build your next workspace in<br />
+                <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">
+                  minutes, not hours.
+                </span>
+              </h1>
+
+              {/* Subtext */}
+              <p className="max-w-lg text-sm text-gray-400 sm:text-base leading-relaxed">
+                Harness the power of next-generation 3D AI project management. Boost productivity, visualize progress, and align teams effortlessly in <span className="text-cyan-300 font-medium">বাংলা</span>, <span className="text-cyan-300 font-medium">Banglish</span> or <span className="text-cyan-300 font-medium">English</span>.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                {/* Primary Glowing Cyan Button */}
+                <button
+                  onClick={scrollToGenerator}
+                  className="group relative inline-flex items-center gap-2.5 rounded-full border border-cyan-400 bg-[#0e2230] px-7 py-3 text-sm font-bold text-cyan-300 shadow-[0_0_30px_rgba(34,211,238,0.45)] backdrop-blur-md transition-all duration-300 hover:bg-cyan-400 hover:text-black hover:shadow-[0_0_45px_rgba(34,211,238,0.7)] active:scale-95"
+                >
+                  <span>Get Started Free</span>
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                </button>
+
+                {/* Secondary Dark Frosted Button (0 Tokens Safe Demo) */}
+                <button
+                  onClick={scrollToGenerator}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-gray-300 shadow-md backdrop-blur-md transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  <span>⚡ Free Demo (0 Tokens)</span>
+                </button>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Main AI Workspace Generator Surface */}
-      <section className="relative">
-        <div className="card-3d rounded-2xl border border-primary/20 bg-card/60 p-1 shadow-2xl shadow-primary/5 backdrop-blur-xl">
+            {/* Hero Right Column: Exact 3D Holographic Kanban & Cubes Showcase */}
+            <div className="lg:col-span-6 xl:col-span-7">
+              <Hero3DShowcase />
+            </div>
+          </div>
+        </section>
+      </DotDistortionShader>
+
+      {/* ========================================================================= */}
+      {/* INTERACTIVE WORKSPACE GENERATOR SECTION (Revealed on Scroll or CTA)      */}
+      {/* ========================================================================= */}
+      <section ref={generatorRef} className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        <div className="mb-8 space-y-3 text-center sm:text-left">
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-300">
+            <Sparkles className="size-3.5 animate-pulse" />
+            <span>Interactive AI Engine</span>
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight text-white sm:text-4xl">
+            Build Your Workspace with Natural Language
+          </h2>
+          <p className="text-sm text-gray-400">
+            Prompt your requirement in any language. The 3D engine synthesizes your custom dashboard live.
+          </p>
+        </div>
+
+        {/* 3D Glass Container around the Workspace Generator */}
+        <div className="card-3d rounded-3xl border border-cyan-500/25 bg-[#0a101d]/85 p-2 shadow-[0_20px_70px_rgba(0,0,0,0.8),0_0_35px_rgba(34,211,238,0.1)] backdrop-blur-2xl">
           <WorkspaceGenerator />
         </div>
       </section>
 
-      {/* 3D Bento Feature Cards */}
-      <section className="grid gap-4 sm:grid-cols-3">
-        {[
-          {
-            icon: Layers,
-            title: "Spatial Registry",
-            badge: "13 Widgets",
-            text: "Dashboards are dynamically assembled from approved UI components.",
-            gradient: "from-blue-500/10 to-indigo-500/10",
-          },
-          {
-            icon: ShieldCheck,
-            title: "Zero Code Gen",
-            badge: "Safe Zod",
-            text: "AI produces strict schema JSON. No arbitrary code execution.",
-            gradient: "from-emerald-500/10 to-teal-500/10",
-          },
-          {
-            icon: Boxes,
-            title: "Living & Editable",
-            badge: "Real-time",
-            text: "Persisted locally. Modify manually or converse with the AI.",
-            gradient: "from-purple-500/10 to-pink-500/10",
-          },
-        ].map(({ icon: Icon, title, badge, text, gradient }) => (
-          <div
-            key={title}
-            className={`card-3d group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-gradient-to-br ${gradient} p-5 shadow-sm transition-all`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-card/80 text-primary shadow-xs backdrop-blur-md">
-                <Icon className="size-4.5" />
-              </span>
-              <span className="rounded-full border border-border/60 bg-card/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                {badge}
-              </span>
-            </div>
-            <div className="mt-4 space-y-1">
-              <h3 className="font-semibold text-foreground">{title}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">{text}</p>
-            </div>
+      {/* ========================================================================= */}
+      {/* ACTIVE WORKSPACES SECTION                                                 */}
+      {/* ========================================================================= */}
+      <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
+        <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
+          <div>
+            <h3 className="text-lg font-bold text-white">Your Saved Workspaces</h3>
+            <p className="text-xs text-gray-400">Stored safely in browser LocalStorage</p>
           </div>
-        ))}
-      </section>
-
-      {/* Workspaces Grid */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold tracking-tight text-foreground">Active Workspaces</h2>
-          <span className="text-xs text-muted-foreground">{workspaces.length} saved</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-cyan-400">
+              {workspaces.length} Available
+            </span>
+            <ImportWorkspaceButton className="border-white/15 bg-white/5 text-gray-200 hover:bg-white/10" />
+          </div>
         </div>
 
         {workspaces.length === 0 ? (
-          <Card className="card-3d border-dashed p-8 text-center text-sm text-muted-foreground backdrop-blur-sm">
-            No workspaces yet. Enter a prompt above to create your first dynamic dashboard.
-          </Card>
+          <div className="card-3d rounded-2xl border border-dashed border-white/10 bg-[#0c121e]/50 p-10 text-center text-sm text-gray-400 backdrop-blur-md">
+            No workspaces in this browser yet. Prompt above to assemble your first dashboard, or import one you exported from another browser or from localhost (Settings → Export workspace).
+          </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {workspaces.map((w) => (
@@ -151,11 +158,11 @@ export default function HomePage() {
                 key={w.id}
                 href="/dashboard"
                 onClick={() => setActive(w.id)}
-                className="card-3d group flex flex-col justify-between rounded-2xl border bg-card/80 p-5 backdrop-blur-md transition-all hover:border-primary/50"
+                className="card-3d group flex flex-col justify-between rounded-2xl border border-white/10 bg-[#0d1424]/80 p-5 shadow-lg backdrop-blur-md transition-all hover:border-cyan-400/50 hover:shadow-[0_0_25px_rgba(34,211,238,0.18)]"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
+                    <p className="font-bold leading-snug text-white group-hover:text-cyan-300 transition-colors">
                       {w.config.name}
                     </p>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -163,12 +170,14 @@ export default function HomePage() {
                       <Badge color="violet">{w.config.language}</Badge>
                     </div>
                   </div>
-                  <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{w.config.description}</p>
+                  <p className="mt-2 line-clamp-2 text-xs text-gray-400">
+                    {w.config.description}
+                  </p>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t pt-3 text-[11px] text-muted-foreground">
+                <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-3 text-[11px] text-gray-400">
                   <span>{w.config.pages.length} pages · {w.data.tasks.length} tasks</span>
-                  <span className="flex items-center gap-1 text-primary font-medium opacity-80 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">
+                  <span className="flex items-center gap-1 font-semibold text-cyan-400 opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all">
                     Open <ChevronRight className="size-3.5" />
                   </span>
                 </div>
@@ -177,6 +186,18 @@ export default function HomePage() {
           </div>
         )}
       </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-[#05070c] py-8 text-center text-xs text-gray-500">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6">
+          <div className="flex items-center gap-2">
+            <span className="size-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
+            <span className="font-semibold text-gray-300">Kajflow AI</span>
+            <span>— 3D Dynamic Work Management</span>
+          </div>
+          <p>© 2026 Kajflow. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 }

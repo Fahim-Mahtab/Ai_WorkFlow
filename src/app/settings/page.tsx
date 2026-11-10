@@ -11,6 +11,8 @@ import { FieldsEditor, finalizeFieldIds } from "@/components/editor/collection-f
 import { Button } from "@/components/ui/button";
 import { Badge, Card, Checkbox, Input, Label, NativeSelect, Textarea, DOT_COLORS } from "@/components/ui/primitives";
 import { useConfirm } from "@/components/ui/dialog";
+import { ImportWorkspaceButton } from "@/components/layout/import-workspace-button";
+import { downloadWorkspace } from "@/lib/workspace/transfer";
 import { validateConfig } from "@/lib/config/validate";
 import { clearAll, storageSize } from "@/lib/storage/local";
 import { resetUsage } from "@/lib/storage/usage";
@@ -96,14 +98,7 @@ function SettingsView({ ws }: { ws: Workspace }) {
     if (apply({ ...config, taskStatuses: fixed }, "Task statuses updated")) affected.forEach((t) => actions.updateTask(t.id, { status: fixed[0].id }));
   };
 
-  const download = () => {
-    const blob = new Blob([JSON.stringify(ws, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${slugify(config.name, "workspace")}.workspace.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
+  const download = () => downloadWorkspace(ws);
 
   return (
     <div className="mx-auto max-w-4xl space-y-5 px-4 py-6 sm:px-6">
@@ -211,29 +206,7 @@ function SettingsView({ ws }: { ws: Workspace }) {
           </Button>
           <Button size="sm" variant="outline" onClick={() => { setJson(JSON.stringify(config, null, 2)); setJsonErrors([]); }}>Reset</Button>
           <Button size="sm" variant="outline" onClick={download}><Download /> Export workspace</Button>
-          <label className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border px-3 text-xs font-medium hover:bg-muted">
-            <Upload className="size-4" /> Import workspace
-            <input
-              type="file"
-              accept="application/json"
-              className="hidden"
-              onChange={async (e) => {
-                const f = e.target.files?.[0];
-                e.target.value = "";
-                if (!f) return;
-                try {
-                  const obj = JSON.parse(await f.text()) as Workspace;
-                  const v = validateConfig(obj.config);
-                  if (!v.ok || !obj.data) throw new Error(v.errors[0] ?? "Missing data");
-                  addWorkspace({ ...obj, id: uid("ws"), config: v.config! });
-                  toast.success(`Imported “${v.config!.name}”`);
-                  router.push("/dashboard");
-                } catch (err) {
-                  toast.error("Import failed: " + (err as Error).message);
-                }
-              }}
-            />
-          </label>
+          <ImportWorkspaceButton />
         </div>
       </Section>
 

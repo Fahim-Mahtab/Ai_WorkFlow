@@ -5,6 +5,7 @@
  * resized, configured, switched to another view or removed; pages can be
  * added, renamed and deleted.
  */
+import { WidgetHeaderSlot } from "./header-slot";
 import { useEffect, useMemo, useState } from "react";
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
@@ -40,10 +41,11 @@ export const PAGE_ICON_MAP: Record<PageIcon, React.ComponentType<{ className?: s
 };
 
 const SPAN: Record<number, string> = {
+  // phones get 2 columns too, so small metric cards sit side by side instead of one per screen
   1: "col-span-1",
-  2: "col-span-1 md:col-span-2",
-  3: "col-span-1 md:col-span-2 xl:col-span-3",
-  4: "col-span-1 md:col-span-2 xl:col-span-4",
+  2: "col-span-2",
+  3: "col-span-2 xl:col-span-3",
+  4: "col-span-2 xl:col-span-4",
 };
 
 interface Props {
@@ -105,7 +107,7 @@ export function DashboardCanvas({ workspace, pageId, onPageChange, editing = fal
   return (
     <div className="space-y-4">
       {/* Page tabs */}
-      <div className="flex items-center gap-1 overflow-x-auto border-b pb-px scrollbar-thin">
+      <div className="flex items-center gap-1 overflow-x-auto border-b pb-px scrollbar-none">
         {config.pages.map((p) => {
           const Icon = PAGE_ICON_MAP[p.icon ?? "dashboard"] ?? LayoutDashboard;
           const active = p.id === page.id;
@@ -184,7 +186,7 @@ export function DashboardCanvas({ workspace, pageId, onPageChange, editing = fal
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={widgetIds} strategy={rectSortingStrategy}>
-            <div className="grid grid-flow-row-dense grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-flow-row-dense grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
               {page.widgets.map((w) => (
                 <WidgetFrame
                   key={w.id}
@@ -237,7 +239,7 @@ function WidgetFrame({ widget, editing, canEdit, onSettings, onResize, onSwitch,
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: widget.id, disabled: !editing });
   const style = { transform: CSS.Translate.toString(transform), transition };
   const alternates = CATALOG[widget.type].alternates ?? [];
-  const Icon = WIDGET_ICONS[widget.type];
+  const [slot, setSlot] = useState<HTMLSpanElement | null>(null);
 
   return (
     <Card ref={setNodeRef} style={style} className={cn(SPAN[widget.width] ?? SPAN[2], "card-3d flex min-w-0 flex-col rounded-2xl border bg-card/90 backdrop-blur-md shadow-xs transition-all", editing && "ring-1 ring-primary/20", isDragging && "z-10 opacity-80 shadow-2xl scale-[1.02]")}>
@@ -251,6 +253,7 @@ function WidgetFrame({ widget, editing, canEdit, onSettings, onResize, onSwitch,
           <h3 className="truncate text-sm font-semibold">{widget.title}</h3>
           {widget.description && <p className="truncate text-xs text-muted-foreground">{widget.description}</p>}
         </div>
+        <span ref={setSlot} className="flex shrink-0 items-center" />
         {canEdit && (alternates.length > 0 || editing) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -287,10 +290,11 @@ function WidgetFrame({ widget, editing, canEdit, onSettings, onResize, onSwitch,
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-        {!editing && <Icon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/50" />}
       </div>
       <div className="min-w-0 flex-1 px-4 pb-4">
-        <RenderWidget widget={widget} />
+        <WidgetHeaderSlot.Provider value={slot}>
+          <RenderWidget widget={widget} />
+        </WidgetHeaderSlot.Provider>
       </div>
     </Card>
   );

@@ -3,6 +3,7 @@
  * Exposes a uniform field schema + flat rows so every widget (table, chart,
  * metric, calendar…) can work against any source without custom code.
  */
+import { todayISO } from "../utils";
 import type {
   FieldDef,
   FlatRow,
@@ -30,6 +31,8 @@ export function taskFields(config: WorkspaceConfig): FieldDef[] {
     { id: "createdAt", label: t(L, "createdAt"), type: "date" },
     { id: "completedAt", label: t(L, "completedAt"), type: "date" },
     { id: "kind", label: t(L, "kind"), type: "select", options: ["assigned", "self"] },
+    // computed: past the deadline and not finished
+    { id: "overdue", label: L === "bn" ? "মেয়াদোত্তীর্ণ" : "Overdue", type: "checkbox" },
     ...config.taskFields,
   ];
 }
@@ -70,6 +73,8 @@ export function getSource(config: WorkspaceConfig, id: string): SourceInfo | und
 
 export function getRows(ws: Workspace, sourceId: string): FlatRow[] {
   if (sourceId === "tasks") {
+    const today = todayISO();
+    const done = new Set(ws.config.taskStatuses.filter((s) => s.isDone).map((s) => s.id));
     return ws.data.tasks.map((task) => ({
       id: task.id,
       title: task.title,
@@ -81,6 +86,7 @@ export function getRows(ws: Workspace, sourceId: string): FlatRow[] {
       createdAt: task.createdAt.slice(0, 10),
       completedAt: task.completedAt?.slice(0, 10),
       kind: task.kind,
+      overdue: !!task.dueDate && task.dueDate < today && !done.has(task.status),
       ...task.custom,
     }));
   }

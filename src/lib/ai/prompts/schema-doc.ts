@@ -50,6 +50,7 @@ Widget = common { "id": slug, "type", "title": string, "description"?: string, "
 - worklog:    { "showRecent"?: number }                     (employees describe today's work in natural language; AI splits it into entries)
 - workload:   { }                                           (each person's open tasks by status, late / at-risk deadlines, hours logged; use for "who has how much work", capacity, overload)
 Filter = { "field": field id, "op": "eq"|"neq"|"contains"|"empty"|"notEmpty"|"gt"|"lt", "value"?: string|number|boolean }
+  Dates compare as dates; "value": "today" means today's date. For OVERDUE tasks always use { "field": "overdue", "op": "eq", "value": true } (past deadline and not done), never a fixed date.
 
 COMPONENT REGISTRY (the ONLY allowed widget types):
 ${catalogForPrompt()}

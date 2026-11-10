@@ -37,7 +37,7 @@ export function KanbanWidget({ widget }: { widget: WidgetOf<"kanban"> }) {
 
   return (
     <DndContext sensors={sensors} onDragStart={(e) => setDragging(workspace.data.tasks.find((x) => x.id === e.active.id) ?? null)} onDragEnd={onDragEnd} onDragCancel={() => setDragging(null)}>
-      <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 scrollbar-thin">
+      <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 scrollbar-none sm:snap-none">
         {config.taskStatuses.map((s, i) => {
           const items = byStatus(s.id, i === 0);
           return (
@@ -71,7 +71,7 @@ export function KanbanWidget({ widget }: { widget: WidgetOf<"kanban"> }) {
 function Column({ id, disabled, children }: { id: string; disabled?: boolean; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id, disabled });
   return (
-    <div ref={setNodeRef} className={cn("flex w-64 shrink-0 flex-col rounded-lg bg-muted/50 p-2 transition-colors", isOver && "bg-accent ring-2 ring-primary/30")}>
+    <div ref={setNodeRef} className={cn("flex min-w-[80%] flex-1 basis-56 snap-start flex-col sm:min-w-56 rounded-lg bg-muted/50 p-2 transition-colors", isOver && "bg-accent ring-2 ring-primary/30")}>
       {children}
     </div>
   );

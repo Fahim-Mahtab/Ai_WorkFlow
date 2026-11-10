@@ -50,8 +50,10 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   // stage tells Retry what to redo: the conversation turn, or the edit it asked for
   const [error, setError] = useState<{ err: ApiError; stage: "chat" | "edit"; text: string } | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
+  const [panelMode, setPanelMode] = useState<"demo" | "live">("demo");
+  const isDemo = panelMode === "demo";
   const endRef = useRef<HTMLDivElement>(null);
-  const live = status?.mode === "live";
+  const live = !isDemo && status?.mode === "live";
   const totals = useUsageTotals(active?.id);
 
   useEffect(() => {
@@ -74,7 +76,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   };
 
   /** Turn the conversation into a concrete change, then show it for approval. */
-  const runEdit = async (instruction: string, forceDemo = false) => {
+  const runEdit = async (instruction: string, forceDemo = isDemo) => {
     if (!active) return;
     setError(null);
     setBusy("edit");
@@ -114,7 +116,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   };
 
   /** Talk first: the AI answers, asks when unclear, or decides a change is ready. */
-  const talk = async (history: ChatEntry[], forceDemo = false) => {
+  const talk = async (history: ChatEntry[], forceDemo = isDemo) => {
     if (!active) return;
     setError(null);
     setBusy("chat");
@@ -139,7 +141,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
     const history = [...chat, entry];
     push({ role: "user", text: entry.text });
     setInput("");
-    talk(history);
+    talk(history, isDemo);
   };
 
   const retry = (forceDemo: boolean) => {
@@ -168,11 +170,21 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
   return (
     <aside className="fixed inset-0 z-30 flex flex-col border-l bg-card sm:static sm:z-auto sm:w-[380px] sm:shrink-0">
       <div className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
-        <Sparkles className="size-4 text-primary" />
-        <span className="text-sm font-semibold">AI Assistant</span>
-        {status && <Badge color={live ? "green" : "amber"}>{live ? "live" : "demo"}</Badge>}
+        <Sparkles className="size-4 shrink-0 text-primary" />
+        <span className="whitespace-nowrap text-sm font-semibold">AI Assistant</span>
+        <button
+          type="button"
+          onClick={() => setPanelMode((m) => (m === "demo" ? "live" : "demo"))}
+          className="ml-1 shrink-0 cursor-pointer"
+          title={isDemo ? "Demo mode: free, 0 tokens. Click to switch to live DeepSeek AI" : "Live DeepSeek AI. Click to switch to free demo mode (0 tokens)"}
+          aria-label={isDemo ? "Demo mode, click for live AI" : "Live AI, click for demo mode"}
+        >
+          <Badge color={live ? "green" : "amber"} className="whitespace-nowrap">
+            {isDemo ? "⚡ Demo" : "🤖 Live"}
+          </Badge>
+        </button>
         <div className="flex-1" />
-        <UsageTotalPill totals={totals.workspace} title="AI spend on this workspace" />
+        <span className="hidden sm:inline-flex"><UsageTotalPill totals={totals.workspace} title="AI spend on this workspace" /></span>
         {active && chat.length > 0 && (
           <Button variant="ghost" size="iconSm" title="Clear conversation" aria-label="Clear conversation" onClick={() => { setChat([]); saveChat(active.id, []); }}>
             <Trash2 />

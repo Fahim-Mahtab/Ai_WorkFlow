@@ -6,7 +6,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw } from "lucide-react";
 import { aiClient, ApiError, type GenerateResult } from "@/lib/ai/client";
 import { LANGUAGE_LABEL } from "@/lib/ai/language";
 import { createWorkspace } from "@/lib/workspace/factory";
@@ -23,7 +23,7 @@ import { UsageBadge } from "./usage-badge";
 import { finalizeTeam, TeamSetup } from "./team-setup";
 import { attachPendingUsage } from "@/lib/storage/usage";
 import { saveChat } from "@/lib/storage/local";
-import { nowISO, uid } from "@/lib/utils";
+import { cn, nowISO, uid } from "@/lib/utils";
 
 type Phase = "idle" | "running" | "clarify" | "preview" | "error";
 
@@ -37,20 +37,31 @@ export function WorkspaceGenerator() {
   const [error, setError] = useState<ApiError | null>(null);
   const [answers, setAnswers] = useState<string[]>([]);
   const [usedPrompt, setUsedPrompt] = useState("");
+  const [isDoneAnimating, setIsDoneAnimating] = useState(false);
   const live = status?.mode === "live";
+
+  const [generatorMode, setGeneratorMode] = useState<"demo" | "live">("demo");
+  const isDemo = generatorMode === "demo";
 
   const run = async (p: string, opts: { forceDemo?: boolean; forceGenerate?: boolean } = {}) => {
     if (!p.trim()) return;
     setPhase("running");
     setError(null);
     setUsedPrompt(p);
+    const finalForceDemo = opts.forceDemo !== undefined ? opts.forceDemo : isDemo;
     try {
-      const r = await aiClient.generate({ prompt: p, ...opts });
+      const r = await aiClient.generate({ prompt: p, ...opts, forceDemo: finalForceDemo });
       setResult(r);
       if (r.needsClarification || !r.config) {
         setAnswers(r.questions.map(() => ""));
         setPhase("clarify");
-      } else setPhase("preview");
+      } else {
+        setIsDoneAnimating(true);
+        setTimeout(() => {
+          setIsDoneAnimating(false);
+          setPhase("preview");
+        }, 1200);
+      }
     } catch (e) {
       setError(e instanceof ApiError ? e : new ApiError(String(e), "unknown"));
       setPhase("error");
@@ -81,24 +92,71 @@ export function WorkspaceGenerator() {
 
   const withAnswers = () => {
     const extra = result!.questions.map((q, i) => (answers[i]?.trim() ? `${q} → ${answers[i].trim()}` : "")).filter(Boolean).join("\n");
-    run(`${usedPrompt}\n\n${extra}`, { forceGenerate: true });
+    run(`${usedPrompt}\n\n${extra}`, { forceDemo: isDemo, forceGenerate: true });
   };
 
   return (
     <div className="space-y-6">
+      {/* Provider Mode Switcher: Free Demo (0 Tokens) vs Live DeepSeek API */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#090e18]/80 px-4 py-3 backdrop-blur-xl">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-gray-300">Engine Mode:</span>
+          <div className="inline-flex rounded-full border border-white/10 bg-black/40 p-1">
+            <button
+              type="button"
+              onClick={() => setGeneratorMode("demo")}
+              className={cn(
+                "flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold transition-all",
+                isDemo
+                  ? "bg-cyan-500/20 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.3)] border border-cyan-400/40"
+                  : "text-gray-400 hover:text-white"
+              )}
+            >
+              <span>⚡ Free Demo (0 Tokens)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setGeneratorMode("live")}
+              className={cn(
+                "flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold transition-all",
+                !isDemo
+                  ? "bg-amber-500/20 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.3)] border border-amber-400/40"
+                  : "text-gray-400 hover:text-white"
+              )}
+            >
+              <span>🤖 Live DeepSeek API</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="text-xs">
+          {isDemo ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/40 px-3 py-1 font-medium text-cyan-300">
+              <span className="size-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              Safe Test Mode: Uses local dummy engine · 0 API tokens charged
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-950/40 px-3 py-1 font-medium text-amber-300">
+              <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Live Mode: Requests consume tokens from your DeepSeek account
+            </span>
+          )}
+        </div>
+      </div>
+
       <IntakeChat
         disabled={phase === "running"}
+        forceDemo={isDemo}
         onBuild={(brief, t) => {
           setTranscript(t);
-          run(brief, { forceGenerate: true });
+          run(brief, { forceDemo: isDemo, forceGenerate: true });
         }}
       />
 
-      {phase === "running" && (
-        <Card className="p-5">
-          <p className="mb-3 flex items-center gap-2 text-sm font-medium"><Sparkles className="size-4 text-primary" /> Building your workspace {live ? `with ${status?.provider}` : "(demo mode)"}…</p>
-          <GenerationProgress steps={GENERATE_STEPS} running done={false} live={live} />
-        </Card>
+      {(phase === "running" || isDoneAnimating) && (
+        <div className="card-3d rounded-2xl border border-primary/30 bg-card/90 p-5 shadow-2xl backdrop-blur-2xl">
+          <GenerationProgress steps={GENERATE_STEPS} running={!isDoneAnimating} done={isDoneAnimating} live={live} />
+        </div>
       )}
 
       {phase === "error" && error && (

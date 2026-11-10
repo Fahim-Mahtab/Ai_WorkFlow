@@ -107,11 +107,11 @@ function Builder({ cfg, onDone }: { cfg: WorkspaceConfig; onDone: (d: Draft) => 
       <div className="grid gap-2 sm:grid-cols-[5rem_1fr] sm:items-center">
         <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">WHEN</span>
         <div className="flex flex-wrap gap-2">
-          <NativeSelect value={trigger} onChange={(e) => setTrigger(e.target.value as TriggerKind)} className="w-60" aria-label="Trigger">
+          <NativeSelect value={trigger} onChange={(e) => setTrigger(e.target.value as TriggerKind)} className="w-full sm:w-60" aria-label="Trigger">
             {TRIGGERS.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
           </NativeSelect>
           {trigger === "status_changed" && (
-            <NativeSelect value={tStatus} onChange={(e) => setTStatus(e.target.value)} className="w-40" aria-label="Status">
+            <NativeSelect value={tStatus} onChange={(e) => setTStatus(e.target.value)} className="w-full sm:w-40" aria-label="Status">
               {cfg.taskStatuses.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
             </NativeSelect>
           )}
@@ -123,11 +123,11 @@ function Builder({ cfg, onDone }: { cfg: WorkspaceConfig; onDone: (d: Draft) => 
         </div>
         <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">IF <span className="font-normal text-muted-foreground">(optional)</span></span>
         <div className="flex flex-wrap gap-2">
-          <NativeSelect value={who} onChange={(e) => setWho(e.target.value)} className="w-44" aria-label="Only for person">
+          <NativeSelect value={who} onChange={(e) => setWho(e.target.value)} className="w-full sm:w-44" aria-label="Only for person">
             <option value="">Anyone</option>
             {cfg.team.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
           </NativeSelect>
-          <NativeSelect value={prio} onChange={(e) => setPrio(e.target.value as "" | PriorityId)} className="w-40" aria-label="Only for priority">
+          <NativeSelect value={prio} onChange={(e) => setPrio(e.target.value as "" | PriorityId)} className="w-full sm:w-40" aria-label="Only for priority">
             <option value="">Any priority</option>
             {PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
           </NativeSelect>
@@ -136,11 +136,11 @@ function Builder({ cfg, onDone }: { cfg: WorkspaceConfig; onDone: (d: Draft) => 
         <div className="space-y-2">
           {actions.map((a, i) => (
             <div key={i} className="flex flex-wrap items-center gap-2">
-              <NativeSelect value={a.kind} onChange={(e) => { const kind = e.target.value as ActionKind; setActions((as) => as.map((x, j) => (j === i ? { kind, value: defaultValue(kind) } : x))); }} className="w-52" aria-label="Action">
+              <NativeSelect value={a.kind} onChange={(e) => { const kind = e.target.value as ActionKind; setActions((as) => as.map((x, j) => (j === i ? { kind, value: defaultValue(kind) } : x))); }} className="w-full sm:w-52" aria-label="Action">
                 {ACTIONS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
               </NativeSelect>
               {a.kind === "set_priority" || a.kind === "set_status" || a.kind === "assign" ? (
-                <NativeSelect value={a.value} onChange={(e) => setActions((as) => as.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} className="w-44" aria-label="Value">
+                <NativeSelect value={a.value} onChange={(e) => setActions((as) => as.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} className="w-full sm:w-44" aria-label="Value">
                   {a.kind === "set_priority" && PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
                   {a.kind === "set_status" && cfg.taskStatuses.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
                   {a.kind === "assign" && cfg.team.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -243,7 +243,7 @@ function AutomationsView({ workspace }: { workspace: Workspace }) {
         </div>
         <div className="flex flex-wrap gap-1.5">
           {EXAMPLES.map((x) => (
-            <button key={x} type="button" onClick={() => setText(x)} className="rounded-full border px-2.5 py-1 text-[11px] text-muted-foreground hover:border-primary hover:bg-accent hover:text-accent-foreground">{x}</button>
+            <button key={x} type="button" title={x} onClick={() => setText(x)} className="max-w-full truncate rounded-full border px-2.5 py-1 text-[11px] text-muted-foreground hover:border-primary hover:bg-accent hover:text-accent-foreground">{x}</button>
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">

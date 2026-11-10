@@ -129,6 +129,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { hydrated, storageError } = useStore();
   const [mobileNav, setMobileNav] = useState(false);
   const allUsage = useUsageTotals(null);
+  const pathname = usePathname();
+  const isLanding = pathname === "/";
+
+  if (isLanding) {
+    return (
+      <div className="min-h-screen bg-[#06080e] text-white">
+        {storageError && (
+          <div className="bg-destructive/10 px-4 py-1.5 text-center text-xs text-destructive">
+            Could not save to LocalStorage: {storageError}
+          </div>
+        )}
+        <main className="min-w-0 flex-1">
+          {children}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -149,7 +166,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu /></Button>
           <div className="flex-1" />
           {status && (
-            <Badge color={status.mode === "live" ? "green" : "amber"} title={status.model}>
+            <Badge color={status.mode === "live" ? "green" : "amber"} title={status.model} className="hidden md:inline-flex">
               <span className={cn("size-1.5 rounded-full", status.mode === "live" ? "bg-green-500" : "bg-amber-500")} />
               {status.mode === "live" ? `AI: ${status.provider} (${status.model})` : "Demo mode — no API key"}
             </Badge>
@@ -157,8 +174,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="hidden sm:inline-flex"><UsageTotalPill totals={allUsage.all} title="Total AI spend in this browser" /></span>
           <NotificationBell />
           <ThemeToggle />
-          <Button variant={open ? "secondary" : "default"} size="sm" className="rounded-full px-4" onClick={() => setOpen(!open)}>
-            <Sparkles /> AI Assistant
+          <Button variant={open ? "secondary" : "default"} size="sm" className="shrink-0 rounded-full px-3 sm:px-4" onClick={() => setOpen(!open)} aria-label="AI Assistant">
+            <Sparkles /> <span className="hidden sm:inline">AI Assistant</span><span className="sm:hidden">AI</span>
           </Button>
         </header>
         {storageError && <div className="bg-destructive/10 px-4 py-1.5 text-xs text-destructive">Could not save to LocalStorage: {storageError}</div>}

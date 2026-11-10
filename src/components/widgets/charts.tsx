@@ -7,6 +7,7 @@
 import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { BarChart3, Table2 } from "lucide-react";
+import { HeaderAction } from "@/components/dashboard/header-slot";
 import type { WidgetOf } from "@/lib/config/types";
 import { useEnv } from "@/components/dashboard/env";
 import { getRows, getSource } from "@/lib/engine/sources";
@@ -52,9 +53,11 @@ function ChartShell({ data, lang, children }: { data: Datum[]; lang: "bn" | "en"
   if (data.length === 0 || data.every((d) => d.value === 0)) return <EmptyState icon={<BarChart3 />} title={t("noData")} className="py-6" />;
   return (
     <div className="relative">
-      <button onClick={() => setAsTable((v) => !v)} className="absolute -top-1 right-0 z-10 rounded p-1 text-muted-foreground hover:bg-muted" aria-label={asTable ? "Show chart" : "Show as table"} title={asTable ? "Show chart" : "Show as table"}>
-        {asTable ? <BarChart3 className="size-3.5" /> : <Table2 className="size-3.5" />}
-      </button>
+      <HeaderAction fallbackClassName="absolute -top-1 right-0 z-10">
+        <button onClick={() => setAsTable((v) => !v)} className="rounded p-1 text-muted-foreground opacity-60 hover:bg-muted hover:opacity-100" aria-label={asTable ? "Show chart" : "Show as table"} title={asTable ? "Show chart" : "Show as table"}>
+          {asTable ? <BarChart3 className="size-4" /> : <Table2 className="size-4" />}
+        </button>
+      </HeaderAction>
       {asTable ? <DataTable data={data} lang={lang} /> : children}
     </div>
   );
@@ -134,8 +137,10 @@ export function PieChartWidget({ widget }: { widget: WidgetOf<"pieChart"> }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
     <ChartShell data={data} lang={config.language}>
-      <div className="flex flex-col items-center gap-3 sm:flex-row">
-        <div className="h-44 w-44 shrink-0">
+      {/* side by side only when the card itself is wide enough, so legend labels never get cut to "In …" */}
+      <div className="@container">
+      <div className="flex flex-col items-center gap-3 @xs:flex-row">
+        <div className="size-36 shrink-0 @sm:size-44">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={data} dataKey="value" nameKey="label" innerRadius="58%" outerRadius="95%" paddingAngle={1} stroke="var(--card)" strokeWidth={2} isAnimationActive={false}>
@@ -157,6 +162,7 @@ export function PieChartWidget({ widget }: { widget: WidgetOf<"pieChart"> }) {
             </li>
           ))}
         </ul>
+      </div>
       </div>
     </ChartShell>
   );
