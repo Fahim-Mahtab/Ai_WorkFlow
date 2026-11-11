@@ -259,6 +259,24 @@ body {
   animation: aura-flow 8s ease infinite;
 }
 
+@keyframes scanline {
+  0% {
+    top: 0%;
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    top: 100%;
+    opacity: 0.1;
+  }
+}
+
+.animate-scanline {
+  animation: scanline 3.5s ease-in-out infinite;
+}
+
 /* Glassmorphism Depth */
 .glass-panel {
   background: rgba(255, 255, 255, 0.7);
